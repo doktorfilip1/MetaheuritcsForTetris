@@ -1,0 +1,7 @@
+pygame: Ova biblioteka omogućava kreiranje grafike i zvuka, što se koristi za pravljenje igre
+random: Koristi se za nasumičan odabir boje ili tipa figure
+time: Koristi se za implementaciju pauza (kao u time.sleep()), što usporava igru u određenim trenucima
+
+Figure: Klasa koja predstavlja jednu Tetris figuru. Svaka figura ima svoj tip, boju, poziciju (x, y) i rotaciju.
+image: Vraća trenutno stanje figure (koje zavisi od rotacije).
+rotate: Menja rotaciju figure (u 90 stepeni).
