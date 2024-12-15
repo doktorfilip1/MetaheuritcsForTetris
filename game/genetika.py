@@ -1,5 +1,7 @@
 import random
 
+# kostur za gen alg
+
 class Individual():
     def __init__(self,cost,costFixed):
         self.cost = cost
