@@ -61,7 +61,8 @@ def simulate_game(alpha):
     table = [[0 for _ in range(x)] for _ in range (y)]
     
     while(True):
-        next_block = table[random.randint(0,6)]
+       # next_block = table[random.randint(0,6)] ?greska?
+        next_block = random.choice(figures)
         check = 0
         if(can_place_next_block(table, next_block)): 
             field_variations1 = find_all_field_variations_for_block(table, next_block)
@@ -84,7 +85,8 @@ def simulate_game(alpha):
                 if calculate_fitness(fld,alpha) < best_fitness:
                     best_field = fld
         table = best_field
-    print(np.arraytable, '\n')  
+    #print(np.arraytable, '\n') ?greska?
+    print(np.array(table), '\n')
     return calculate_fitness(table,alpha)
             
         
