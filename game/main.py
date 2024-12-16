@@ -84,8 +84,24 @@ def simulate_game(alpha):
                 if calculate_fitness(fld, alpha) < best_fitness:
                     best_field = fld
             table = best_field
+            
+            for fld in field_variations2:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+            
+            for fld in field_variations3:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+            
+            for fld in field_variations4:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+            
 
-    print(np.array(table), '\n')
+    #print(np.array(table), '\n')
     return calculate_fitness(table, alpha)
 
 
