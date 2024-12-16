@@ -200,8 +200,8 @@ def calculate_fitness(field,alpha):
     
 
 # Parametri genetskog algoritma
-GENS = 5
-POPULATION_SIZE = 5
+GENS = 10
+POPULATION_SIZE = 10
 GENOME_SIZE = 3  # Broj težinskih faktora (može se proširiti)
 
 # Inicijalizacija populacije
