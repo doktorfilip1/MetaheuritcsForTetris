@@ -56,43 +56,38 @@ def simulate_game(alpha):
     ]
     x = 10
     y = 20
-    alpha = [1,1,1]
-    
-    table = [[0 for _ in range(x)] for _ in range (y)]
-    
-    while(True):
-       # next_block = table[random.randint(0,6)] ?greska?
-        next_block = random.choice(figures)
+
+    table = [[0 for _ in range(x)] for _ in range(y)]
+
+    while True:
+        next_block = random.choice(figures)  # Izbor nasumičnog bloka
         check = 0
-        if(can_place_next_block(table, next_block)): 
+
+        if can_place_next_block(table, next_block):
             field_variations1 = find_all_field_variations_for_block(table, next_block)
             check = 1
-        if(can_place_next_block(table, np.rot90(next_block))):
+        if can_place_next_block(table, np.rot90(next_block)):
             field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
             check = 1
-        if(can_place_next_block(table,np.rot90(np.rot90(next_block)))):
+        if can_place_next_block(table, np.rot90(np.rot90(next_block))):
             field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
             check = 1
-        if(can_place_next_block(table,np.rot90(np.rot90(np.rot90(next_block))))):  
+        if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
             field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
             check = 1
-        if(check == 0):
+        if check == 0:
             break
         else:
             best_fitness = 10000
             best_field = None
             for fld in field_variations1:
-                if calculate_fitness(fld,alpha) < best_fitness:
+                if calculate_fitness(fld, alpha) < best_fitness:
                     best_field = fld
-        table = best_field
-    #print(np.arraytable, '\n') ?greska?
+            table = best_field
+
     print(np.array(table), '\n')
-    return calculate_fitness(table,alpha)
-            
-        
-        
-         
-    
+    return calculate_fitness(table, alpha)
+
 
 def is_valid_placement(field, block, row, col):
     """Check if placing the block at (row, col) is valid."""
