@@ -197,7 +197,7 @@ def calculate_fitness(field,alpha):
     fitness = -empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2]
     return fitness
     
-    
+    #izmena test
 
 # Parametri genetskog algoritma
 GENS = 10
