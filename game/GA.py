@@ -2,6 +2,7 @@ import random
 from copy import deepcopy
 import numpy as np
 
+
 class Individual:
     def __init__(self, genome_size):
         # Težinski faktori za različite aspekte igre
@@ -36,7 +37,7 @@ def crossover(parent1, parent2):
     return child1, child2
 
 
-def mutation(individual, mutation_rate=0.1):
+def mutation(individual, mutation_rate=0.2):
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
             individual.code[i] += random.uniform(-0.1, 0.1)
@@ -85,7 +86,22 @@ def simulate_game(alpha):
                     best_field = fld
             table = best_field
 
-    print(np.array(table), '\n')
+            for fld in field_variations2:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+
+            for fld in field_variations3:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+
+            for fld in field_variations4:
+                if calculate_fitness(fld, alpha) < best_fitness:
+                    best_field = fld
+            table = best_field
+
+    # print(np.array(table), '\n')
     return calculate_fitness(table, alpha)
 
 
@@ -104,6 +120,7 @@ def is_valid_placement(field, block, row, col):
 
     return True
 
+
 def can_fall_to_position(field, block, row, col):
     """Check if the block can rest at the given position."""
     block_h, block_w = len(block), len(block[0])
@@ -119,6 +136,7 @@ def can_fall_to_position(field, block, row, col):
 
     return False
 
+
 def place_block(field, block, row, col):
     """Place the block on the field at (row, col)."""
     field = deepcopy(field)
@@ -131,6 +149,7 @@ def place_block(field, block, row, col):
 
     return field
 
+
 def can_place_next_block(field, block):
     """Check if the next block can be placed on the field in any valid position."""
     field_h, field_w = len(field), len(field[0])
@@ -142,6 +161,7 @@ def can_place_next_block(field, block):
                 return True  # Found at least one valid position
 
     return False  # No valid position found
+
 
 def find_all_field_variations_for_block(field, block):
     """Find all possible field variations with the block placed in its current orientation."""
@@ -159,7 +179,7 @@ def find_all_field_variations_for_block(field, block):
     return variations
 
 
-def calculate_fitness(field,alpha):
+def calculate_fitness(field, alpha):
     """Calculate the fitness of the field based on empty spaces, max height, and roughness."""
     height = len(field)
     width = len(field[0])
@@ -194,10 +214,11 @@ def calculate_fitness(field,alpha):
     roughness = sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
 
     # Combine metrics into fitness score
-    fitness = -empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2]
+    fitness = -empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2]
     return fitness
-    
-    
+
+    # izmena test
+
 
 # Parametri genetskog algoritma
 GENS = 10
