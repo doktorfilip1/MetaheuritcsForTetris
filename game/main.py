@@ -58,6 +58,7 @@ def simulate_game(alpha):
     y = 20
 
     table = [[0 for _ in range(x)] for _ in range(y)]
+    SCORE = 0
 
     while True:
         next_block = random.choice(figures)  # Izbor nasumičnog bloka
@@ -78,31 +79,55 @@ def simulate_game(alpha):
         if check == 0:
             break
         else:
-            best_fitness = 10000
+            best_fitness = float('inf')
             best_field = None
             for fld in field_variations1:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
             
             for fld in field_variations2:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
             
             for fld in field_variations3:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
             
             for fld in field_variations4:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
             
+            for i in range(y):
+                lineFull = True
+                for j in range(x):
+                    if table[i][j] == 0:
+                        lineFull = False
+                if lineFull:
+                    SCORE += 2
+                    for m in range(i,0,-1):
+                        for k in range(x):
+                            table[m][k] = table[m-1][k]
+                    for m in range(x):
+                        table[0][m] = 0
+                            
+                    
 
     #print(np.array(table), '\n')
-    return calculate_fitness(table, alpha)
+    
+    
+    return SCORE
 
 
 def is_valid_placement(field, block, row, col):
@@ -209,16 +234,27 @@ def calculate_fitness(field,alpha):
         heights.append(col_height)
     roughness = sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
 
+    # Calculate lineClose
+    lineFull = 0
+    for i in range(height):
+        lineFull = True
+        for j in range(width):
+            if field[i][j] == 0:
+                lineFull = False
+        if lineFull:
+            lineFull = width*height
+            
+    
     # Combine metrics into fitness score
-    fitness = -empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2]
+    fitness = empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2] + lineFull*alpha[3]
     return fitness
     
     #izmena test
 
 # Parametri genetskog algoritma
-GENS = 10
+GENS = 20
 POPULATION_SIZE = 10
-GENOME_SIZE = 3  # Broj težinskih faktora (može se proširiti)
+GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
 # Inicijalizacija populacije
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
@@ -233,7 +269,7 @@ for generation in range(GENS):
     new_population = []
 
     # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = POPULATION_SIZE // 10
+    ELITISM_COUNT = 0
     new_population.extend(population[:ELITISM_COUNT])
 
     # Kreiranje nove populacije crossover-om i mutacijom
@@ -258,3 +294,12 @@ for generation in range(GENS):
 # Najbolji rezultat nakon evolucije
 best_individual = max(population, key=lambda ind: ind.fitness)
 print("Best genome:", best_individual.code)
+
+
+
+#test primeri:
+    #[0.8436153139457457, 0.2059519813755888, 0.15403289979294965]
+    #[0.881036592441558, 0.18586751614889707, 0.0572259541698763]
+    #[0.9734392181022447, 0.016703755793639363, 0.10454590714611912]
+    #[0.6382315836336813, 0.46692019853050104, 0.08578839087790846]
+    #[0.6706317468942101, 0.07599448100694117, 0.13637162600127606]
