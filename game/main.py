@@ -1,25 +1,23 @@
 import random
 from copy import deepcopy
 import numpy as np
+from debugpy.launcher.debuggee import process
 
 
 class Individual:
     def __init__(self, genome_size):
-        # Težinski faktori za različite aspekte igre
         self.code = [random.uniform(0, 1) for _ in range(genome_size)]
         self.fitness = None
 
     def calcFit(self, simulate_game):
-        # Fitness funkcija simulira igru i vraća rezultat (npr. broj poena)
         self.fitness = simulate_game(self.code)
-        return self.fitness
 
     def __lt__(self, other):
         return self.fitness < other.fitness
 
 
 def selection(population):
-    TOURNAMENT_SIZE = 5
+    TOURNAMENT_SIZE = 3
     best = None
     for _ in range(TOURNAMENT_SIZE):
         candidate = random.choice(population)
@@ -55,75 +53,42 @@ def simulate_game(alpha):
         [[1, 1, 0], [0, 1, 1]],
         [[1, 1, 1, 1]],
     ]
+
     x = 10
     y = 20
-
     table = [[0 for _ in range(x)] for _ in range(y)]
     SCORE = 0
 
     while True:
-        next_block = random.choice(figures)  # Izbor nasumičnog bloka
-        check = 0
+        next_block = random.choice(figures)
+        block_rotations = [next_block]
 
-        if can_place_next_block(table, next_block):
-            field_variations1 = find_all_field_variations_for_block(table, next_block)
-            check = 1
-        if can_place_next_block(table, np.rot90(next_block)):
-            field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(next_block))):
-            field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
-            field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
-            check = 1
-        if check == 0:
+        for _ in range(3):
+            block_rotations.append(np.rot90(block_rotations[-1]))  # dodavanje rotacija
+
+        best_fitness = float('inf')
+        best_field = None
+        for rotation in block_rotations:
+            if can_place_next_block(table, rotation):
+                field_variations = find_all_field_variations_for_block(table, rotation)
+                for fld in field_variations:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_fitness = ft
+                        best_field = fld
+
+        if best_field is None:
             break
-        else:
-            best_fitness = float('inf')
-            best_field = None
-            for fld in field_variations1:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
 
-            for fld in field_variations2:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
+        table = best_field
 
-            for fld in field_variations3:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-
-            for fld in field_variations4:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-
-            for i in range(y):
-                lineFull = True
-                for j in range(x):
-                    if table[i][j] == 0:
-                        lineFull = False
-                if lineFull:
-                    SCORE += 2
-                    for m in range(i, 0, -1):
-                        for k in range(x):
-                            table[m][k] = table[m - 1][k]
-                    for m in range(x):
-                        table[0][m] = 0
-
-    # print(np.array(table), '\n')
+        # Brisanje popunjenih linija
+        for i in range(y):
+            if all(table[i]):
+                SCORE += 2  # bonus za popunjenu liniju
+                for m in range(i, 0, -1):
+                    table[m] = table[m - 1]
+                table[0] = [0] * x
 
     return SCORE
 
@@ -253,47 +218,70 @@ def calculate_fitness(field, alpha):
     # izmena test
 
 
-# Parametri genetskog algoritma
-GENS = 20
-POPULATION_SIZE = 10
-GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
+from multiprocessing import Pool
+import json
 
-# Inicijalizacija populacije
-population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
+from multiprocessing import Pool
 
-# Prva evaluacija populacije
-for individual in population:
+def fitness_wrapper(individual):
+    """Helper funkcija za izracunavanje fitness vrednosti"""
     individual.calcFit(simulate_game)
+    return individual.fitness
 
-# Glavna petlja genetskog algoritma
-for generation in range(GENS):
-    population.sort(reverse=True)
-    new_population = []
+def calculate_population_fitness(population):
+    with Pool(processes=4) as pool:
+        fitness_values = pool.map(fitness_wrapper, population)
+    return fitness_values
 
-    # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = 1
-    new_population.extend(population[:ELITISM_COUNT])
+# main
+if __name__ == "__main__":
+    results = {
+        "generations": [],
+        "best_fitness": []
+    }
 
-    # Kreiranje nove populacije crossover-om i mutacijom
-    while len(new_population) < POPULATION_SIZE:
-        parent1 = selection(population)
-        parent2 = selection(population)
-        child1, child2 = crossover(parent1, parent2)
-        mutation(child1)
-        mutation(child2)
-        child1.calcFit(simulate_game)
-        child2.calcFit(simulate_game)
-        new_population.append(child1)
-        if len(new_population) < POPULATION_SIZE:
-            new_population.append(child2)
+    GENS = 15
+    POPULATION_SIZE = 10
+    GENOME_SIZE = 4
 
-    population = new_population
+    population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
 
-    # Najbolji pojedinac u generaciji
+    for generation in range(GENS):
+
+        # paralelno izracunavanje fitness vrednosti
+        fitness_values = calculate_population_fitness(population)
+        for i, fitness in enumerate(fitness_values):
+            population[i].fitness = fitness
+
+        population.sort(reverse=True)
+        new_population = []
+
+        ELITISM_COUNT = 1
+        new_population.extend(population[:ELITISM_COUNT])
+
+        while len(new_population) < POPULATION_SIZE:
+            parent1 = selection(population)
+            parent2 = selection(population)
+            child1, child2 = crossover(parent1, parent2)
+            mutation(child1, mutation_rate=0.1)
+            mutation(child2, mutation_rate=0.1)
+            new_population.append(child1)
+            if len(new_population) < POPULATION_SIZE:
+                new_population.append(child2)
+
+        population = new_population
+
+        for individual in population:
+            individual.calcFit(simulate_game)
+
+        best_individual = max(population, key=lambda ind: ind.fitness)
+        print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
+
+        results["generations"].append(generation + 1)
+        results["best_fitness"].append(best_individual.fitness)
+
+    with open("results.json", "w") as f:
+        json.dump(results, f)
+
     best_individual = max(population, key=lambda ind: ind.fitness)
-    print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
-
-# Najbolji rezultat nakon evolucije
-best_individual = max(population, key=lambda ind: ind.fitness)
-print("Best genome:", best_individual.code)
-
+    print("Best genome:", best_individual.code)
