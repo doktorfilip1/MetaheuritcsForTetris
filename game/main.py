@@ -1,8 +1,6 @@
 import random
 from copy import deepcopy
 import numpy as np
-from debugpy.launcher.debuggee import process
-
 
 class Individual:
     def __init__(self, genome_size):
@@ -17,7 +15,7 @@ class Individual:
 
 
 def selection(population):
-    TOURNAMENT_SIZE = 3
+    TOURNAMENT_SIZE = 10
     best = None
     for _ in range(TOURNAMENT_SIZE):
         candidate = random.choice(population)
@@ -91,7 +89,6 @@ def simulate_game(alpha):
                 table[0] = [0] * x
 
     return SCORE
-
 
 def is_valid_placement(field, block, row, col):
     """Check if placing the block at (row, col) is valid."""
@@ -215,8 +212,6 @@ def calculate_fitness(field, alpha):
     fitness = empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2] - lineFull * alpha[3]
     return fitness
 
-    # izmena test
-
 
 from multiprocessing import Pool
 import json
@@ -240,7 +235,7 @@ if __name__ == "__main__":
         "best_fitness": []
     }
 
-    GENS = 15
+    GENS = 20
     POPULATION_SIZE = 10
     GENOME_SIZE = 4
 
@@ -263,8 +258,8 @@ if __name__ == "__main__":
             parent1 = selection(population)
             parent2 = selection(population)
             child1, child2 = crossover(parent1, parent2)
-            mutation(child1, mutation_rate=0.1)
-            mutation(child2, mutation_rate=0.1)
+            mutation(child1, mutation_rate=0.2)
+            mutation(child2, mutation_rate=0.2)
             new_population.append(child1)
             if len(new_population) < POPULATION_SIZE:
                 new_population.append(child2)
