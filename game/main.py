@@ -37,7 +37,7 @@ def crossover(parent1, parent2):
     return child1, child2
 
 
-def mutation(individual, mutation_rate=0.2):
+def mutation(individual, mutation_rate=0.1):
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
             individual.code[i] += random.uniform(-0.1, 0.1)
@@ -59,6 +59,7 @@ def simulate_game(alpha):
     y = 20
 
     table = [[0 for _ in range(x)] for _ in range(y)]
+    SCORE = 0
 
     while True:
         next_block = random.choice(figures)  # Izbor nasumičnog bloka
@@ -79,30 +80,52 @@ def simulate_game(alpha):
         if check == 0:
             break
         else:
-            best_fitness = 10000
+            best_fitness = float('inf')
             best_field = None
             for fld in field_variations1:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
 
             for fld in field_variations2:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
 
             for fld in field_variations3:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
 
             for fld in field_variations4:
-                if calculate_fitness(fld, alpha) < best_fitness:
+                ft = calculate_fitness(fld, alpha)
+                if ft < best_fitness:
                     best_field = fld
+                    best_fitness = ft
             table = best_field
 
+            for i in range(y):
+                lineFull = True
+                for j in range(x):
+                    if table[i][j] == 0:
+                        lineFull = False
+                if lineFull:
+                    SCORE += 2
+                    for m in range(i, 0, -1):
+                        for k in range(x):
+                            table[m][k] = table[m - 1][k]
+                    for m in range(x):
+                        table[0][m] = 0
+
     # print(np.array(table), '\n')
-    return calculate_fitness(table, alpha)
+
+    return SCORE
 
 
 def is_valid_placement(field, block, row, col):
@@ -213,17 +236,27 @@ def calculate_fitness(field, alpha):
         heights.append(col_height)
     roughness = sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
 
+    # Calculate lineClose
+    lineFull = 0
+    for i in range(height):
+        lineFull = True
+        for j in range(width):
+            if field[i][j] == 0:
+                lineFull = False
+        if lineFull:
+            lineFull = width * height
+
     # Combine metrics into fitness score
-    fitness = -empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2]
+    fitness = empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2] - lineFull * alpha[3]
     return fitness
 
     # izmena test
 
 
 # Parametri genetskog algoritma
-GENS = 10
-POPULATION_SIZE = 5
-GENOME_SIZE = 3  # Broj težinskih faktora (može se proširiti)
+GENS = 20
+POPULATION_SIZE = 10
+GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
 # Inicijalizacija populacije
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
@@ -238,7 +271,7 @@ for generation in range(GENS):
     new_population = []
 
     # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = POPULATION_SIZE // 10
+    ELITISM_COUNT = 1
     new_population.extend(population[:ELITISM_COUNT])
 
     # Kreiranje nove populacije crossover-om i mutacijom
@@ -263,3 +296,4 @@ for generation in range(GENS):
 # Najbolji rezultat nakon evolucije
 best_individual = max(population, key=lambda ind: ind.fitness)
 print("Best genome:", best_individual.code)
+

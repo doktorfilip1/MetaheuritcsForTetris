@@ -1,5 +1,6 @@
 import pygame
 import random
+import copy
 import time
 
 colors = [
@@ -114,6 +115,55 @@ class Tetris:
         self.figure.rotate()
         if self.intersects():
             self.figure.rotation = old_rotation
+
+
+import copy
+
+# dodata klasa za simulaciju
+class TetrisSim(Tetris):
+    def __init__(self, height, width):
+        super().__init__(height, width)
+
+    def simulate_move(self, move):
+        simulated_game = copy.deepcopy(self)
+
+        if move == 'left':
+            simulated_game.go_side(-1)
+        elif move == 'right':
+            simulated_game.go_side(1)
+        elif move == 'rotate':
+            simulated_game.rotate()
+        elif move == 'down':
+            simulated_game.go_down()
+
+        return simulated_game
+
+    def get_possible_moves(self):
+        return ['left', 'right', 'rotate', 'down'] # da li testirati down?
+
+    def evaluate_game(self):
+        # fitness funkcija -->  cilj je da minimiziramo visinu stubova i maksimiziramo broj očišćenih linija
+        lines_cleared = self.score
+        highest_column = max(
+            [sum(1 for i in range(self.height) if self.field[i][col] > 0) for col in range(self.width)])
+
+        # fitness: Manja visina i veći broj očišćenih linija je bolje
+        return lines_cleared - highest_column
+
+    def best_move(self):
+        # testiramo sve moguće poteze i vraćamo najbolji
+        best_score = -float('inf')
+        best_move = None
+
+        for move in self.get_possible_moves():
+            simulated_game = self.simulate_move(move)
+            score = simulated_game.evaluate_game()
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+        return best_move
 
 
 pygame.init()
