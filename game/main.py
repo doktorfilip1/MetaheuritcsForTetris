@@ -246,7 +246,7 @@ def calculate_fitness(field,alpha):
             
     
     # Combine metrics into fitness score
-    fitness = empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2] + lineFull*alpha[3]
+    fitness = empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2] - lineFull*alpha[3]
     return fitness
     
     #izmena test
@@ -269,7 +269,7 @@ for generation in range(GENS):
     new_population = []
 
     # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = 0
+    ELITISM_COUNT = 1
     new_population.extend(population[:ELITISM_COUNT])
 
     # Kreiranje nove populacije crossover-om i mutacijom
