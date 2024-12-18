@@ -252,7 +252,7 @@ def calculate_fitness(field,alpha):
     #izmena test
 
 # Parametri genetskog algoritma
-GENS = 300
+GENS = 200
 POPULATION_SIZE = 10
 GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
@@ -269,7 +269,7 @@ for generation in range(GENS):
     new_population = []
 
     # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = 1
+    ELITISM_COUNT = 2
     new_population.extend(population[:ELITISM_COUNT])
 
     # Kreiranje nove populacije crossover-om i mutacijom
@@ -287,6 +287,9 @@ for generation in range(GENS):
 
     population = new_population
 
+    for i in range(ELITISM_COUNT):
+        population[i].calcFit(simulate_game)
+    
     # Najbolji pojedinac u generaciji
     best_individual = max(population, key=lambda ind: ind.fitness)
     print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
