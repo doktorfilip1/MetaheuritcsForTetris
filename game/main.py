@@ -252,7 +252,7 @@ def calculate_fitness(field,alpha):
     #izmena test
 
 # Parametri genetskog algoritma
-GENS = 20
+GENS = 300
 POPULATION_SIZE = 10
 GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
