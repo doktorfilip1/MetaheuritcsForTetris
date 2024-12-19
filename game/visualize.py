@@ -9,7 +9,7 @@ def visualize_results(results_file):
     best_fitness = data["best_fitness"]
 
     plt.figure(figsize=(10, 6))
-    plt.plot(generations, best_fitness, marker='o', linestyle='-', color='b')
+    plt.plot(generations, best_fitness, marker='o', linestyle='-', color='r')
     plt.title("Best Fitness Through Generations")
     plt.xlabel("Generation")
     plt.ylabel("Best Fitness")
