@@ -1,28 +1,26 @@
 import matplotlib.pyplot as plt
 
-# New data
-generations = list(range(1, 201))
-best_fitness = [
-    176, 272, 262, 204, 210, 128, 278, 182, 238, 260, 288, 244, 568, 552, 782, 386, 870, 1486, 894, 
-    1326, 1082, 1098, 1436, 1156, 1714, 1148, 2154, 1814, 1488, 1264, 1294, 1258, 2500, 2404, 1674, 
-    2988, 1166, 1186, 1252, 1332, 1576, 1394, 1906, 1538, 2150, 1496, 1916, 988, 1692, 1718, 2200, 
-    1604, 1590, 1278, 1580, 1728, 3608, 2022, 2546, 2246, 2228, 4986, 2842, 1026, 1810, 2224, 3122, 
-    2284, 3358, 1668, 1470, 1154, 2206, 2536, 2718, 1514, 3944, 2318, 1430, 4292, 1932, 994, 1998, 
-    1890, 1936, 2130, 2054, 1418, 1202, 2002, 1758, 1450, 2692, 2006, 1564, 1246, 2628, 1156, 2400, 
-    2208, 1894, 1242, 914, 2932, 2554, 2518, 1602, 1722, 1634, 3766, 2176, 2284, 1314, 1970, 1660, 
-    2478, 2110, 2476, 1874, 1680, 994, 1934, 1844, 1672, 1274, 1086, 2960, 1434, 1982, 3098, 2436, 
-    1508, 1292, 3356, 5420, 2612, 1048, 2010, 2666, 1616, 1272, 2730, 3904, 2984, 3504, 922, 2518, 
-    1842, 1182, 4268, 1978, 1944, 1914, 1940, 994, 1472, 1884, 1868, 2030, 2860, 1544, 2914, 3238, 
-    2194, 2354, 2228, 3734, 4468, 2304, 1942, 3286, 2890, 2632, 1140, 2506, 1338, 2192, 1906, 2604, 
-    4972, 1408, 2630, 2886, 1800, 2638, 926, 6008, 1528, 1942, 1780, 3682, 1736, 3204, 2592, 2402, 
-    2206, 928, 1818, 1636, 1002
-]
+# Read the data from the file
+generations = []
+fitnesses = []
+with open("/home/vookmeer/Documents/GitHub/MetaheuritcsForTetris/proba/data.txt", 'r') as file:
+    for line in file:
+        parts = line.split(': ')
+        if len(parts) == 2:
+            generation = int(parts[0].split()[1])
+            fitness = float(parts[1].split('=')[1])
+            generations.append(generation)
+            fitnesses.append(fitness)
 
-# Plot
+# Create the plot
 plt.figure(figsize=(10, 6))
-plt.plot(generations, best_fitness, marker='o', color='purple', linewidth=1.5, markersize=3)
-plt.title('Best Fitness Across Generations', fontsize=14)
-plt.xlabel('Generation', fontsize=12)
-plt.ylabel('Best Fitness', fontsize=12)
-plt.grid(alpha=0.5)
+plt.plot(generations, fitnesses, marker='o')
+
+# Labeling the axes
+plt.xlabel('Generation')
+plt.ylabel('Best Fitness')
+plt.title('Best Fitness Over Generations')
+
+# Display the plot
+plt.grid(True)
 plt.show()

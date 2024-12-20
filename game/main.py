@@ -36,7 +36,7 @@ def crossover(parent1, parent2):
     return child1, child2
 
 
-def mutation(individual, mutation_rate=0.1):
+def mutation(individual, mutation_rate=0.2):
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
             individual.code[i] += random.uniform(-0.1, 0.1)
@@ -252,7 +252,7 @@ def calculate_fitness(field,alpha):
     #izmena test
 
 # Parametri genetskog algoritma
-GENS = 200
+GENS = 30
 POPULATION_SIZE = 10
 GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
