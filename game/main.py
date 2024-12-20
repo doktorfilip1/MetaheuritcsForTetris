@@ -1,14 +1,17 @@
 import random
 from copy import deepcopy
 import numpy as np
+import json
 
 
 class Individual:
     def __init__(self, genome_size):
+        # Težinski faktori za različite aspekte igre
         self.code = [random.uniform(0, 1) for _ in range(genome_size)]
         self.fitness = None
 
     def calcFit(self, simulate_game):
+        # Fitness funkcija simulira igru i vraća rezultat (npr. broj poena)
         self.fitness = simulate_game(self.code)
         return self.fitness
 
@@ -42,6 +45,7 @@ def mutation(individual, mutation_rate=0.1):
             individual.code[i] = max(0, min(1, individual.code[i]))
 
 
+# Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
 def simulate_game(alpha):
     figures = [
         [[1, 0, 0], [1, 1, 1]],
@@ -52,76 +56,43 @@ def simulate_game(alpha):
         [[1, 1, 0], [0, 1, 1]],
         [[1, 1, 1, 1]],
     ]
-    x = 10
-    y = 20
-
+    x, y = 10, 20
     table = [[0 for _ in range(x)] for _ in range(y)]
-    SCORE = 0
+    score = 0
 
     while True:
         next_block = random.choice(figures)  # Izbor nasumičnog bloka
-        check = 0
+        field_variations = []
 
-        if can_place_next_block(table, next_block):
-            field_variations1 = find_all_field_variations_for_block(table, next_block)
-            check = 1
-        if can_place_next_block(table, np.rot90(next_block)):
-            field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(next_block))):
-            field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
-            field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
-            check = 1
-        if check == 0:
+        # Generisanje svih rotacija i validnih varijacija za blok
+        for rotation in range(4):
+            rotated_block = np.rot90(next_block, rotation)
+            if can_place_next_block(table, rotated_block):
+                field_variations.extend(find_all_field_variations_for_block(table, rotated_block))
+
+        if not field_variations:  # Ako nema validnih pozicija, igra se završava
             break
-        else:
-            best_fitness = float('inf')
-            best_field = None
-            for fld in field_variations1:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
 
-            for fld in field_variations2:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
+        # Pronalazak najboljeg fitnesa i ažuriranje tabele
+        best_fitness = float('inf')
+        best_field = None
+        for field in field_variations:
+            fitness = calculate_fitness(field, alpha)
+            if fitness < best_fitness:
+                best_fitness = fitness
+                best_field = field
 
-            for fld in field_variations3:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
+        table = best_field
 
-            for fld in field_variations4:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
+        # Provera i uklanjanje kompletnih linija
+        for i in range(y):
+            if all(table[i][j] == 1 for j in range(x)):
+                score += 2
+                for m in range(i, 0, -1):
+                    table[m] = table[m - 1][:]
+                table[0] = [0] * x
 
-            for i in range(y):
-                lineFull = True
-                for j in range(x):
-                    if table[i][j] == 0:
-                        lineFull = False
-                if lineFull:
-                    SCORE += 2
-                    for m in range(i, 0, -1):
-                        for k in range(x):
-                            table[m][k] = table[m - 1][k]
-                    for m in range(x):
-                        table[0][m] = 0
-
-    # print(np.array(table), '\n')
-    return SCORE
+    return score
 
 
 def is_valid_placement(field, block, row, col):
@@ -130,7 +101,7 @@ def is_valid_placement(field, block, row, col):
     block_h, block_w = len(block), len(block[0])
 
     if row + block_h > field_h or col + block_w > field_w:
-        return False  # Block goes out of field bounds
+        return False  # Block goes out of bounds
 
     for i in range(block_h):
         for j in range(block_w):
@@ -139,22 +110,20 @@ def is_valid_placement(field, block, row, col):
 
     return True
 
-
 def can_fall_to_position(field, block, row, col):
     """Check if the block can rest at the given position."""
     block_h, block_w = len(block), len(block[0])
+    field_h = len(field)
 
-    # Check if the block can stay at the given row without floating
-    if row + block_h == len(field):
-        return True  # Block is at the bottom
-
-    for i in range(block_h):
-        for j in range(block_w):
-            if block[i][j] == 1 and field[row + i + 1][col + j] == 1:
-                return True  # Block rests on another block
+    # Block is at the bottom or rests on another block
+    if row + block_h == field_h or any(
+        block[i][j] == 1 and field[row + i + 1][col + j] == 1
+        for i in range(block_h)
+        for j in range(block_w)
+    ):
+        return True
 
     return False
-
 
 def place_block(field, block, row, col):
     """Place the block on the field at (row, col)."""
@@ -168,19 +137,17 @@ def place_block(field, block, row, col):
 
     return field
 
-
 def can_place_next_block(field, block):
     """Check if the next block can be placed on the field in any valid position."""
     field_h, field_w = len(field), len(field[0])
     block_h, block_w = len(block), len(block[0])
 
     for col in range(field_w - block_w + 1):
-        for row in range(field_h - block_h, -1, -1):  # Start from the bottom
+        for row in range(field_h - block_h, -1, -1):  # Start from bottom
             if is_valid_placement(field, block, row, col) and can_fall_to_position(field, block, row, col):
-                return True  # Found at least one valid position
+                return True
 
-    return False  # No valid position found
-
+    return False
 
 def find_all_field_variations_for_block(field, block):
     """Find all possible field variations with the block placed in its current orientation."""
@@ -189,7 +156,7 @@ def find_all_field_variations_for_block(field, block):
     block_h, block_w = len(block), len(block[0])
 
     for col in range(field_w - block_w + 1):
-        for row in range(field_h - block_h, -1, -1):  # Start from the bottom
+        for row in range(field_h - block_h, -1, -1):  # Start from bottom
             if is_valid_placement(field, block, row, col) and can_fall_to_position(field, block, row, col):
                 new_field = place_block(field, block, row, col)
                 variations.append(new_field)
@@ -199,7 +166,7 @@ def find_all_field_variations_for_block(field, block):
 
 
 def calculate_fitness(field, alpha):
-    """Calculate the fitness of the field based on empty spaces, max height, and roughness."""
+    """Calculate the fitness of the field based on empty spaces, max height, roughness, potential lines, and full lines."""
     height = len(field)
     width = len(field[0])
 
@@ -232,40 +199,46 @@ def calculate_fitness(field, alpha):
         heights.append(col_height)
     roughness = sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
 
-    # Calculate lineClose
+    # Calculate potential for future lines
+    potential_lines = 0
+    for i in range(height):
+        filled_cells = sum(1 for j in range(width) if field[i][j] == 1)
+        if filled_cells >= width - 2:  # Ako je linija skoro popunjena
+            potential_lines += 1
+
+    # Calculate completely full lines
     lineFull = 0
     for i in range(height):
-        lineFull = True
-        for j in range(width):
-            if field[i][j] == 0:
-                lineFull = False
-        if lineFull:
-            lineFull = width * height
+        if all(field[i][j] == 1 for j in range(width)):
+            lineFull += 1
 
-    # Combine metrics into fitness score
-    fitness = empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2] - lineFull * alpha[3]
+    fitness = (empty_spaces * alpha[0] +
+               max_height * alpha[1] +
+               roughness * alpha[2] -
+               potential_lines * alpha[3] -
+               lineFull * alpha[4])
     return fitness
 
-import json
+GENS = 30
+POPULATION_SIZE = 15
+GENOME_SIZE = 5  # Broj težinskih faktora
 
-GENS = 20
-POPULATION_SIZE = 10
-GENOME_SIZE = 4
-
+# Inicijalizacija populacije
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
+bestFitness = 0
+bestCode = [0, 0, 0, 0, 0]
 
 for individual in population:
     individual.calcFit(simulate_game)
 
-results = {
-    "generations": [],
-    "best_fitness": []
-}
+results = {"generations": [], "best_fitness": []}
 
+# Glavna petlja genetskog algoritma
 for generation in range(GENS):
     population.sort(reverse=True)
     new_population = []
-    ELITISM_COUNT = 1
+
+    ELITISM_COUNT = 2
     new_population.extend(population[:ELITISM_COUNT])
 
     while len(new_population) < POPULATION_SIZE:
@@ -286,15 +259,24 @@ for generation in range(GENS):
         population[i].calcFit(simulate_game)
 
     best_individual = max(population, key=lambda ind: ind.fitness)
-    print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
 
-    # Save results for visualization
+    if best_individual.fitness > bestFitness:
+        bestCode = best_individual.code
+        bestFitness = best_individual.fitness
+
     results["generations"].append(generation + 1)
     results["best_fitness"].append(best_individual.fitness)
 
-# Save results to JSON file
-with open("results.json", "w") as f:
-    json.dump(results, f, indent=4)
+    print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
 
+with open("results.json", "w") as f:
+    json.dump(results, f)
+
+# Najbolji rezultat nakon evolucije
 best_individual = max(population, key=lambda ind: ind.fitness)
+if best_individual.fitness > bestFitness:
+    bestCode = best_individual.code
+    bestFitness = best_individual.fitness
+
 print("Best genome:", best_individual.code)
+print("Best in all iterations genome:", bestCode, " fitness: ", bestFitness)
