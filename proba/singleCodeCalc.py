@@ -251,62 +251,9 @@ def calculate_fitness(field,alpha):
     
     #izmena test
 
-# Parametri genetskog algoritma
-GENS = 20
-POPULATION_SIZE = 10
-GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
 
-# Inicijalizacija populacije
-population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
-bestFitness = 0
-bestCode = [0,0,0,0]
-# Prva evaluacija populacije
-for individual in population:
-    individual.calcFit(simulate_game)
-
-# Glavna petlja genetskog algoritma
-for generation in range(GENS):
-    population.sort(reverse=True)
-    new_population = []
-
-    # Elitizam: Prenos najboljih jedinki
-    ELITISM_COUNT = 2
-    new_population.extend(population[:ELITISM_COUNT])
-
-    # Kreiranje nove populacije crossover-om i mutacijom
-    while len(new_population) < POPULATION_SIZE:
-        parent1 = selection(population)
-        parent2 = selection(population)
-        child1, child2 = crossover(parent1, parent2)
-        mutation(child1)
-        mutation(child2)
-        child1.calcFit(simulate_game)
-        child2.calcFit(simulate_game)
-        new_population.append(child1)
-        if len(new_population) < POPULATION_SIZE:
-            new_population.append(child2)
-
-    population = new_population
-
-    for i in range(ELITISM_COUNT):
-        population[i].calcFit(simulate_game)
-    
-    # Najbolji pojedinac u generaciji
-    best_individual = max(population, key=lambda ind: ind.fitness)
-    
-    if best_individual.fitness > bestFitness:
-        bestCode = best_individual.code
-        bestFitness = best_individual.fitness
-        
-    print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
-
-# Najbolji rezultat nakon evolucije
-best_individual = max(population, key=lambda ind: ind.fitness)
-if best_individual.fitness > bestFitness:
-        bestCode = best_individual.code
-        bestFitness = best_individual.fitness
-        
-print("Best genome:", best_individual.code)
-print("Best in all iterations genome:", bestCode, " fitness: ", bestFitness)
-
-
+jedinka = Individual(4)
+jedinka.code = [0.7081688134659031, 0.11014248648423453, 0.13999307043093268, 0.846820491045681]
+for i in range(50):
+    jedinka.calcFit(simulate_game)
+    print(i+1, "gen, fitness: ", jedinka.fitness)
