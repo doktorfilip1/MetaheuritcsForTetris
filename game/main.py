@@ -306,5 +306,3 @@ if best_individual.fitness > bestFitness:
         
 print("Best genome:", best_individual.code)
 print("Best in all iterations genome:", bestCode, " fitness: ", bestFitness)
-
-
