@@ -131,37 +131,37 @@ def simulate_game(alpha):
 
 
 def is_valid_placement(field, block, row, col):
-    """Check if placing the block at (row, col) is valid."""
+    
     field_h, field_w = len(field), len(field[0])
     block_h, block_w = len(block), len(block[0])
 
     if row + block_h > field_h or col + block_w > field_w:
-        return False  # Block goes out of field bounds
+        return False  # Blok izlazi izvan okvira
 
     for i in range(block_h):
         for j in range(block_w):
             if block[i][j] == 1 and field[row + i][col + j] == 1:
-                return False  # Overlap with occupied space
+                return False  # Preklapa se sa zauzetim mestom
 
     return True
 
 def can_fall_to_position(field, block, row, col):
-    """Check if the block can rest at the given position."""
+    
     block_h, block_w = len(block), len(block[0])
 
-    # Check if the block can stay at the given row without floating
+    # Proverava da li ce blok "lebdeti"
     if row + block_h == len(field):
-        return True  # Block is at the bottom
+        return True  # Blok je na dnu
 
     for i in range(block_h):
         for j in range(block_w):
             if block[i][j] == 1 and field[row + i + 1][col + j] == 1:
-                return True  # Block rests on another block
+                return True  # Blok se oslanja na drugi blok
 
     return False
 
 def place_block(field, block, row, col):
-    """Place the block on the field at (row, col)."""
+
     field = deepcopy(field)
     block_h, block_w = len(block), len(block[0])
 
@@ -173,39 +173,38 @@ def place_block(field, block, row, col):
     return field
 
 def can_place_next_block(field, block):
-    """Check if the next block can be placed on the field in any valid position."""
+    
     field_h, field_w = len(field), len(field[0])
     block_h, block_w = len(block), len(block[0])
 
     for col in range(field_w - block_w + 1):
-        for row in range(field_h - block_h, -1, -1):  # Start from the bottom
+        for row in range(field_h - block_h, -1, -1):  # Krece od dna
             if is_valid_placement(field, block, row, col) and can_fall_to_position(field, block, row, col):
-                return True  # Found at least one valid position
+                return True  # Pronadji makar jednu validnu poziciju
 
-    return False  # No valid position found
+    return False  # Nije pronadjena pozcija za blok
 
 def find_all_field_variations_for_block(field, block):
-    """Find all possible field variations with the block placed in its current orientation."""
+    
     variations = []
     field_h, field_w = len(field), len(field[0])
     block_h, block_w = len(block), len(block[0])
 
     for col in range(field_w - block_w + 1):
-        for row in range(field_h - block_h, -1, -1):  # Start from the bottom
+        for row in range(field_h - block_h, -1, -1):  
             if is_valid_placement(field, block, row, col) and can_fall_to_position(field, block, row, col):
                 new_field = place_block(field, block, row, col)
                 variations.append(new_field)
-                break  # Only consider the first valid placement for each column
-
+                break  
     return variations
 
 
 def calculate_fitness(field,alpha):
-    """Calculate the fitness of the field based on empty spaces, max height, and roughness."""
+    
     height = len(field)
     width = len(field[0])
 
-    # Calculate empty block spaces
+    # Racuna prazna mesta
     empty_spaces = 0
     for col in range(width):
         filled_found = False
@@ -215,7 +214,7 @@ def calculate_fitness(field,alpha):
             elif filled_found and field[row][col] == 0:
                 empty_spaces += 1
 
-    # Calculate max height
+    # racuna maksimalnu visinu
     max_height = 0
     for col in range(width):
         for row in range(height):
@@ -223,7 +222,7 @@ def calculate_fitness(field,alpha):
                 max_height = max(max_height, height - row)
                 break
 
-    # Calculate roughness (difference in column heights)
+    # Racuna razliku visina susednih redova
     heights = []
     for col in range(width):
         col_height = 0
@@ -234,7 +233,7 @@ def calculate_fitness(field,alpha):
         heights.append(col_height)
     roughness = sum(abs(heights[i] - heights[i + 1]) for i in range(len(heights) - 1))
 
-    # Calculate lineClose
+    # Racuna mogucnost zatvaranja linije
     lineFull = 0
     for i in range(height):
         lineFull = True
@@ -245,16 +244,15 @@ def calculate_fitness(field,alpha):
             lineFull = width*height
             
     
-    # Combine metrics into fitness score
+    # Kombinuje predjasnje elemente
     fitness = empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2] - lineFull*alpha[3]
     return fitness
     
-    #izmena test
 
 # Parametri genetskog algoritma
 GENS = 20
 POPULATION_SIZE = 10
-GENOME_SIZE = 4  # Broj težinskih faktora (može se proširiti)
+GENOME_SIZE = 4 
 
 # Inicijalizacija populacije
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
