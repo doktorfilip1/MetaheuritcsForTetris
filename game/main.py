@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+import pickle
 import numpy as np
 import json
 
@@ -29,6 +30,18 @@ def selection(population):
     return best
 
 
+def roulette_wheel_selection(population):
+    total_fitness = sum(individual.fitness for individual in population)
+    spin = random.uniform(0, total_fitness)
+
+    cumulative_fitness = 0
+    for individual in population:
+        cumulative_fitness += individual.fitness
+        if cumulative_fitness > spin:
+            return individual
+
+    return population[-1]
+
 def crossover(parent1, parent2):
     point = random.randint(1, len(parent1.code) - 1)
     child1 = Individual(len(parent1.code))
@@ -37,8 +50,12 @@ def crossover(parent1, parent2):
     child2.code = parent2.code[:point] + parent1.code[point:]
     return child1, child2
 
+<<<<<<< Updated upstream
 
 def mutation(individual, mutation_rate=0.1):
+=======
+def mutation(individual, mutation_rate=0.2):
+>>>>>>> Stashed changes
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
             individual.code[i] += random.uniform(-0.1, 0.1)
@@ -48,14 +65,15 @@ def mutation(individual, mutation_rate=0.1):
 # Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
 def simulate_game(alpha):
     figures = [
-        [[1, 0, 0], [1, 1, 1]],
-        [[0, 0, 1], [1, 1, 1]],
-        [[0, 1, 0], [1, 1, 1]],
-        [[1, 1], [1, 1]],
-        [[0, 1, 1], [1, 1, 0]],
-        [[1, 1, 0], [0, 1, 1]],
-        [[1, 1, 1, 1]],
+        [[[1, 0, 0], [1, 1, 1]], [[1, 1], [0, 1], [0, 1]], [[1, 1, 1], [0, 0, 1]], [[1, 0], [1, 0], [1, 1]]],
+        [[[0, 0, 1], [1, 1, 1]], [[1, 0], [1, 0], [1, 1]], [[1, 1, 1], [1, 0, 0]], [[1, 1], [0, 1], [0, 1]]],
+        [[[0, 1, 0], [1, 1, 1]], [[1, 0], [1, 1], [1, 0]], [[1, 1, 1], [0, 1, 0]], [[0, 1], [1, 1], [0, 1]]],
+        [[[1, 1], [1, 1]]],
+        [[[0, 1, 1], [1, 1, 0]], [[1, 0], [1, 1], [0, 1]]],
+        [[[1, 1, 0], [0, 1, 1]], [[0, 1], [1, 1], [1, 0]]],
+        [[[1, 1, 1, 1]], [[1], [1], [1], [1]]]
     ]
+<<<<<<< Updated upstream
     x, y = 10, 20
     table = [[0 for _ in range(x)] for _ in range(y)]
     score = 0
@@ -93,7 +111,45 @@ def simulate_game(alpha):
                 table[0] = [0] * x
 
     return score
+=======
+    x = 10
+    y = 20
 
+    table = np.zeros((y, x), dtype=int)
+    SCORE = 0
+
+    while True:
+        next_block_rotations = random.choice(figures)  # Izbor nasumičnog bloka sa svim rotacijama
+        best_fitness = float('inf')
+        best_field = None
+
+        for rotation in next_block_rotations:
+            block = np.array(rotation)
+            block_h, block_w = block.shape
+
+            for col in range(x - block_w + 1):
+                for row in range(y - block_h, -1, -1):
+                    if is_valid_placement(table, block, row, col):
+                        new_field = place_block(table, block, row, col)
+                        ft = calculate_fitness(new_field, alpha)
+                        if ft < best_fitness:
+                            best_field = new_field
+                            best_fitness = ft
+
+        if best_field is None:
+            break
+
+        table = best_field
+
+        # Provera i brisanje popunjenih linija
+        full_lines = np.all(table == 1, axis=1)
+        if np.any(full_lines):
+            SCORE += np.sum(full_lines) * 2
+            table = np.delete(table, np.where(full_lines), axis=0)
+            table = np.vstack([np.zeros((np.sum(full_lines), x), dtype=int), table])
+
+    return SCORE
+>>>>>>> Stashed changes
 
 def is_valid_placement(field, block, row, col):
     """Check if placing the block at (row, col) is valid."""
@@ -164,9 +220,14 @@ def find_all_field_variations_for_block(field, block):
 
     return variations
 
+<<<<<<< Updated upstream
 
 def calculate_fitness(field, alpha):
     """Calculate the fitness of the field based on empty spaces, max height, roughness, potential lines, and full lines."""
+=======
+def calculate_fitness(field,alpha):
+    
+>>>>>>> Stashed changes
     height = len(field)
     width = len(field[0])
 
@@ -209,8 +270,23 @@ def calculate_fitness(field, alpha):
     # Calculate completely full lines
     lineFull = 0
     for i in range(height):
+<<<<<<< Updated upstream
         if all(field[i][j] == 1 for j in range(width)):
             lineFull += 1
+=======
+        is_line_full = True
+        for j in range(width):
+            if field[i][j] == 0:
+                is_line_full = False
+        if is_line_full:
+            lineFull += width * height
+            
+    
+    # Kombinuje predjasnje elemente
+    fitness = empty_spaces*alpha[0] + max_height*alpha[1] + roughness*alpha[2] - lineFull*alpha[3]
+    return fitness
+    
+>>>>>>> Stashed changes
 
     fitness = (empty_spaces * alpha[0] +
                max_height * alpha[1] +
@@ -226,8 +302,15 @@ GENOME_SIZE = 5  # Broj težinskih faktora
 # Inicijalizacija populacije
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
 bestFitness = 0
+<<<<<<< Updated upstream
 bestCode = [0, 0, 0, 0, 0]
 
+=======
+bestCode = [0,0,0,0]
+fitness_history = []
+
+# Prva evaluacija populacije
+>>>>>>> Stashed changes
 for individual in population:
     individual.calcFit(simulate_game)
 
@@ -237,7 +320,10 @@ results = {"generations": [], "best_fitness": []}
 for generation in range(GENS):
     population.sort(reverse=True)
     new_population = []
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     ELITISM_COUNT = 2
     new_population.extend(population[:ELITISM_COUNT])
 
@@ -254,11 +340,11 @@ for generation in range(GENS):
             new_population.append(child2)
 
     population = new_population
-
     for i in range(ELITISM_COUNT):
         population[i].calcFit(simulate_game)
 
     best_individual = max(population, key=lambda ind: ind.fitness)
+<<<<<<< Updated upstream
 
     if best_individual.fitness > bestFitness:
         bestCode = best_individual.code
@@ -280,3 +366,10 @@ if best_individual.fitness > bestFitness:
 
 print("Best genome:", best_individual.code)
 print("Best in all iterations genome:", bestCode, " fitness: ", bestFitness)
+=======
+    fitness_history.append(best_individual.fitness)
+    print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
+
+with open("fitness_data.pkl", "wb") as f:
+    pickle.dump(fitness_history, f)
+>>>>>>> Stashed changes
