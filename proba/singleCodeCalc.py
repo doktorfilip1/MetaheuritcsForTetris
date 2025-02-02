@@ -18,30 +18,7 @@ class Individual:
         return self.fitness < other.fitness
 
 
-def selection(population):
-    TOURNAMENT_SIZE = 5
-    best = None
-    for _ in range(TOURNAMENT_SIZE):
-        candidate = random.choice(population)
-        if best is None or candidate.fitness > best.fitness:
-            best = candidate
-    return best
 
-
-def crossover(parent1, parent2):
-    point = random.randint(1, len(parent1.code) - 1)
-    child1 = Individual(len(parent1.code))
-    child2 = Individual(len(parent1.code))
-    child1.code = parent1.code[:point] + parent2.code[point:]
-    child2.code = parent2.code[:point] + parent1.code[point:]
-    return child1, child2
-
-
-def mutation(individual, mutation_rate=0.2):
-    for i in range(len(individual.code)):
-        if random.uniform(0, 1) < mutation_rate:
-            individual.code[i] += random.uniform(-0.1, 0.1)
-            individual.code[i] = max(0, min(1, individual.code[i]))
 
 
 # Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
@@ -258,7 +235,7 @@ def calculate_fitness(field,alpha):
 
 
 jedinka = Individual(4)
-jedinka.code = [0.7081688134659031, 0.11014248648423453, 0.13999307043093268, 0.846820491045681]
+jedinka.code = [1, 0.09113101904215162, 0.18042873323415054, 0.34171898623702524]
 for i in range(1):
     jedinka.calcFit(simulate_game)
     print(i+1, "gen, fitness: ", jedinka.fitness)
