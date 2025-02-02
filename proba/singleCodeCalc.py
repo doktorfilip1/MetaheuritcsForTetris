@@ -2,6 +2,7 @@ import random
 from copy import deepcopy
 import numpy as np
 
+
 class Individual:
     def __init__(self, genome_size):
         # Težinski faktori za različite aspekte igre
@@ -45,6 +46,9 @@ def mutation(individual, mutation_rate=0.2):
 
 # Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
 def simulate_game(alpha):
+    f = open("sheets.txt", 'w')
+    
+    
     figures = [
         [[1, 0, 0], [1, 1, 1]],
         [[0, 0, 1], [1, 1, 1]],
@@ -108,6 +112,7 @@ def simulate_game(alpha):
                     best_field = fld
                     best_fitness = ft
             table = best_field
+            f.write(str(next_block) + '\n' + str(table)+ '\n' + str(SCORE) + '\n')
             
             for i in range(y):
                 lineFull = True
@@ -121,10 +126,10 @@ def simulate_game(alpha):
                             table[m][k] = table[m-1][k]
                     for m in range(x):
                         table[0][m] = 0
+            f.write(str(table) + '\n')
                             
                     
 
-    #print(np.array(table), '\n')
     
     
     return SCORE
@@ -254,6 +259,6 @@ def calculate_fitness(field,alpha):
 
 jedinka = Individual(4)
 jedinka.code = [0.7081688134659031, 0.11014248648423453, 0.13999307043093268, 0.846820491045681]
-for i in range(50):
+for i in range(1):
     jedinka.calcFit(simulate_game)
     print(i+1, "gen, fitness: ", jedinka.fitness)

@@ -39,95 +39,99 @@ def crossover(parent1, parent2):
 def mutation(individual, mutation_rate=0.2):
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
-            individual.code[i] += random.uniform(-0.1, 0.1)
+            individual.code[i] += random.uniform(-0.3, 0.3)
             individual.code[i] = max(0, min(1, individual.code[i]))
 
 
 # Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
 def simulate_game(alpha):
-    figures = [
-        [[1, 0, 0], [1, 1, 1]],
-        [[0, 0, 1], [1, 1, 1]],
-        [[0, 1, 0], [1, 1, 1]],
-        [[1, 1], [1, 1]],
-        [[0, 1, 1], [1, 1, 0]],
-        [[1, 1, 0], [0, 1, 1]],
-        [[1, 1, 1, 1]],
-    ]
-    x = 10
-    y = 20
+    MAX_SCORE = 0
+    NUM_OF_GAMES = 5
+    for i in range(NUM_OF_GAMES):
+        figures = [
+            [[1, 0, 0], [1, 1, 1]],
+            [[0, 0, 1], [1, 1, 1]],
+            [[0, 1, 0], [1, 1, 1]],
+            [[1, 1], [1, 1]],
+            [[0, 1, 1], [1, 1, 0]],
+            [[1, 1, 0], [0, 1, 1]],
+            [[1, 1, 1, 1]],
+        ]
+        x = 10
+        y = 20
 
-    table = [[0 for _ in range(x)] for _ in range(y)]
-    SCORE = 0
+        table = [[0 for _ in range(x)] for _ in range(y)]
+        SCORE = 0
 
-    while True:
-        next_block = random.choice(figures)  # Izbor nasumičnog bloka
-        check = 0
+        while True:
+            next_block = random.choice(figures)  # Izbor nasumičnog bloka
+            check = 0
 
-        if can_place_next_block(table, next_block):
-            field_variations1 = find_all_field_variations_for_block(table, next_block)
-            check = 1
-        if can_place_next_block(table, np.rot90(next_block)):
-            field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(next_block))):
-            field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
-            check = 1
-        if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
-            field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
-            check = 1
-        if check == 0:
-            break
-        else:
-            best_fitness = float('inf')
-            best_field = None
-            for fld in field_variations1:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-            
-            for fld in field_variations2:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-            
-            for fld in field_variations3:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-            
-            for fld in field_variations4:
-                ft = calculate_fitness(fld, alpha)
-                if ft < best_fitness:
-                    best_field = fld
-                    best_fitness = ft
-            table = best_field
-            
-            for i in range(y):
-                lineFull = True
-                for j in range(x):
-                    if table[i][j] == 0:
-                        lineFull = False
-                if lineFull:
-                    SCORE += 2
-                    for m in range(i,0,-1):
-                        for k in range(x):
-                            table[m][k] = table[m-1][k]
-                    for m in range(x):
-                        table[0][m] = 0
+            if can_place_next_block(table, next_block):
+                field_variations1 = find_all_field_variations_for_block(table, next_block)
+                check = 1
+            if can_place_next_block(table, np.rot90(next_block)):
+                field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
+                check = 1
+            if can_place_next_block(table, np.rot90(np.rot90(next_block))):
+                field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
+                check = 1
+            if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
+                field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
+                check = 1
+            if check == 0:
+                break
+            else:
+                best_fitness = float('inf')
+                best_field = None
+                for fld in field_variations1:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
+                
+                for fld in field_variations2:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
+                
+                for fld in field_variations3:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
+                
+                for fld in field_variations4:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
+                
+                for i in range(y):
+                    lineFull = True
+                    for j in range(x):
+                        if table[i][j] == 0:
+                            lineFull = False
+                    if lineFull:
+                        SCORE += 2
+                        for m in range(i,0,-1):
+                            for k in range(x):
+                                table[m][k] = table[m-1][k]
+                        for m in range(x):
+                            table[0][m] = 0
                             
-                    
+        if MAX_SCORE< SCORE:
+            MAX_SCORE = SCORE                
 
     #print(np.array(table), '\n')
     
     
-    return SCORE
+    return MAX_SCORE
 
 
 def is_valid_placement(field, block, row, col):
@@ -250,8 +254,8 @@ def calculate_fitness(field,alpha):
     
 
 # Parametri genetskog algoritma
-GENS = 20
-POPULATION_SIZE = 10
+GENS = 50
+POPULATION_SIZE = 20
 GENOME_SIZE = 4 
 
 # Inicijalizacija populacije
