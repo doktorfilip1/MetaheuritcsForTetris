@@ -1,7 +1,6 @@
 import random
-import pickle
-import numpy as np
 from copy import deepcopy
+import numpy as np
 
 
 class Individual:
@@ -18,6 +17,7 @@ class Individual:
     def __lt__(self, other):
         return self.fitness < other.fitness
 
+
 def selection(population):
     TOURNAMENT_SIZE = 5
     best = None
@@ -27,17 +27,6 @@ def selection(population):
             best = candidate
     return best
 
-def roulette_wheel_selection(population):
-    total_fitness = sum(individual.fitness for individual in population)
-    spin = random.uniform(0, total_fitness)
-
-    cumulative_fitness = 0
-    for individual in population:
-        cumulative_fitness += individual.fitness
-        if cumulative_fitness > spin:
-            return individual
-
-    return population[-1]
 
 def crossover(parent1, parent2):
     point = random.randint(1, len(parent1.code) - 1)
@@ -47,60 +36,103 @@ def crossover(parent1, parent2):
     child2.code = parent2.code[:point] + parent1.code[point:]
     return child1, child2
 
+
 def mutation(individual, mutation_rate=0.2):
     for i in range(len(individual.code)):
         if random.uniform(0, 1) < mutation_rate:
-            individual.code[i] += random.uniform(-0.1, 0.1)
+            individual.code[i] += random.uniform(-0.3, 0.3)
             individual.code[i] = max(0, min(1, individual.code[i]))
+
 
 # Dummy funkcija koja simulira igru i vraća rezultat na osnovu težinskih faktora
 def simulate_game(alpha):
-    figures = [
-        [[[1, 0, 0], [1, 1, 1]], [[1, 1], [0, 1], [0, 1]], [[1, 1, 1], [0, 0, 1]], [[1, 0], [1, 0], [1, 1]]],
-        [[[0, 0, 1], [1, 1, 1]], [[1, 0], [1, 0], [1, 1]], [[1, 1, 1], [1, 0, 0]], [[1, 1], [0, 1], [0, 1]]],
-        [[[0, 1, 0], [1, 1, 1]], [[1, 0], [1, 1], [1, 0]], [[1, 1, 1], [0, 1, 0]], [[0, 1], [1, 1], [0, 1]]],
-        [[[1, 1], [1, 1]]],
-        [[[0, 1, 1], [1, 1, 0]], [[1, 0], [1, 1], [0, 1]]],
-        [[[1, 1, 0], [0, 1, 1]], [[0, 1], [1, 1], [1, 0]]],
-        [[[1, 1, 1, 1]], [[1], [1], [1], [1]]]
-    ]
-    x = 10
-    y = 20
+    MAX_SCORE = 0
+    NUM_OF_GAMES = 5
+    for i in range(NUM_OF_GAMES):
+        figures = [
+            [[1, 0, 0], [1, 1, 1]],
+            [[0, 0, 1], [1, 1, 1]],
+            [[0, 1, 0], [1, 1, 1]],
+            [[1, 1], [1, 1]],
+            [[0, 1, 1], [1, 1, 0]],
+            [[1, 1, 0], [0, 1, 1]],
+            [[1, 1, 1, 1]],
+        ]
+        x = 10
+        y = 20
 
-    table = np.zeros((y, x), dtype=int)
-    SCORE = 0
+        table = [[0 for _ in range(x)] for _ in range(y)]
+        SCORE = 0
 
-    while True:
-        next_block_rotations = random.choice(figures)  # Izbor nasumičnog bloka sa svim rotacijama
-        best_fitness = float('inf')
-        best_field = None
+        while True:
+            next_block = random.choice(figures)  # Izbor nasumičnog bloka
+            check = 0
 
-        for rotation in next_block_rotations:
-            block = np.array(rotation)
-            block_h, block_w = block.shape
+            if can_place_next_block(table, next_block):
+                field_variations1 = find_all_field_variations_for_block(table, next_block)
+                check = 1
+            if can_place_next_block(table, np.rot90(next_block)):
+                field_variations2 = find_all_field_variations_for_block(table, np.rot90(next_block))
+                check = 1
+            if can_place_next_block(table, np.rot90(np.rot90(next_block))):
+                field_variations3 = find_all_field_variations_for_block(table, np.rot90(np.rot90(next_block)))
+                check = 1
+            if can_place_next_block(table, np.rot90(np.rot90(np.rot90(next_block)))):
+                field_variations4 = find_all_field_variations_for_block(table, np.rot90(np.rot90(np.rot90(next_block))))
+                check = 1
+            if check == 0:
+                break
+            else:
+                best_fitness = float('inf')
+                best_field = None
+                for fld in field_variations1:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
 
-            for col in range(x - block_w + 1):
-                for row in range(y - block_h, -1, -1):
-                    if is_valid_placement(table, block, row, col):
-                        new_field = place_block(table, block, row, col)
-                        ft = calculate_fitness(new_field, alpha)
-                        if ft < best_fitness:
-                            best_field = new_field
-                            best_fitness = ft
+                for fld in field_variations2:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
 
-        if best_field is None:
-            break
+                for fld in field_variations3:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
 
-        table = best_field
+                for fld in field_variations4:
+                    ft = calculate_fitness(fld, alpha)
+                    if ft < best_fitness:
+                        best_field = fld
+                        best_fitness = ft
+                table = best_field
 
-        # Provera i brisanje popunjenih linija
-        full_lines = np.all(table == 1, axis=1)
-        if np.any(full_lines):
-            SCORE += np.sum(full_lines) * 2
-            table = np.delete(table, np.where(full_lines), axis=0)
-            table = np.vstack([np.zeros((np.sum(full_lines), x), dtype=int), table])
+                for i in range(y):
+                    lineFull = True
+                    for j in range(x):
+                        if table[i][j] == 0:
+                            lineFull = False
+                    if lineFull:
+                        SCORE += 2
+                        for m in range(i, 0, -1):
+                            for k in range(x):
+                                table[m][k] = table[m - 1][k]
+                        for m in range(x):
+                            table[0][m] = 0
 
-    return SCORE
+        if MAX_SCORE < SCORE:
+            MAX_SCORE = SCORE
+
+            # print(np.array(table), '\n')
+
+    return MAX_SCORE
+
 
 def is_valid_placement(field, block, row, col):
     field_h, field_w = len(field), len(field[0])
@@ -116,6 +148,7 @@ def is_valid_placement(field, block, row, col):
 
     return True
 
+
 def can_fall_to_position(field, block, row, col):
     block_h, block_w = len(block), len(block[0])
 
@@ -130,6 +163,7 @@ def can_fall_to_position(field, block, row, col):
 
     return False
 
+
 def place_block(field, block, row, col):
     field = deepcopy(field)
     block_h, block_w = len(block), len(block[0])
@@ -141,6 +175,7 @@ def place_block(field, block, row, col):
 
     return field
 
+
 def can_place_next_block(field, block):
     field_h, field_w = len(field), len(field[0])
     block_h, block_w = len(block), len(block[0])
@@ -151,6 +186,7 @@ def can_place_next_block(field, block):
                 return True  # Pronadji makar jednu validnu poziciju
 
     return False  # Nije pronadjena pozcija za blok
+
 
 def find_all_field_variations_for_block(field, block):
     variations = []
@@ -164,6 +200,7 @@ def find_all_field_variations_for_block(field, block):
                 variations.append(new_field)
                 break
     return variations
+
 
 def calculate_fitness(field, alpha):
     height = len(field)
@@ -201,12 +238,12 @@ def calculate_fitness(field, alpha):
     # Racuna mogucnost zatvaranja linije
     lineFull = 0
     for i in range(height):
-        is_line_full = True
+        lineFull = True
         for j in range(width):
             if field[i][j] == 0:
-                is_line_full = False
-        if is_line_full:
-            lineFull += width * height
+                lineFull = False
+        if lineFull:
+            lineFull = width * height
 
     # Kombinuje predjasnje elemente
     fitness = empty_spaces * alpha[0] + max_height * alpha[1] + roughness * alpha[2] - lineFull * alpha[3]
@@ -222,8 +259,6 @@ GENOME_SIZE = 4
 population = [Individual(GENOME_SIZE) for _ in range(POPULATION_SIZE)]
 bestFitness = 0
 bestCode = [0, 0, 0, 0]
-fitness_history = []
-
 # Prva evaluacija populacije
 for individual in population:
     individual.calcFit(simulate_game)
@@ -232,9 +267,12 @@ for individual in population:
 for generation in range(GENS):
     population.sort(reverse=True)
     new_population = []
-    ELITISM_COUNT = 1
+
+    # Elitizam: Prenos najboljih jedinki
+    ELITISM_COUNT = 2
     new_population.extend(population[:ELITISM_COUNT])
 
+    # Kreiranje nove populacije crossover-om i mutacijom
     while len(new_population) < POPULATION_SIZE:
         parent1 = selection(population)
         parent2 = selection(population)
@@ -248,9 +286,24 @@ for generation in range(GENS):
             new_population.append(child2)
 
     population = new_population
+
     for i in range(ELITISM_COUNT):
         population[i].calcFit(simulate_game)
 
+    # Najbolji pojedinac u generaciji
     best_individual = max(population, key=lambda ind: ind.fitness)
-    fitness_history.append(best_individual.fitness)
+
+    if best_individual.fitness > bestFitness:
+        bestCode = best_individual.code
+        bestFitness = best_individual.fitness
+
     print(f"Generation {generation + 1}: Best fitness = {best_individual.fitness}")
+
+# Najbolji rezultat nakon evolucije
+best_individual = max(population, key=lambda ind: ind.fitness)
+if best_individual.fitness > bestFitness:
+    bestCode = best_individual.code
+    bestFitness = best_individual.fitness
+
+print("Best genome:", best_individual.code)
+print("Best in all iterations genome:", bestCode, " fitness: ", bestFitness)
