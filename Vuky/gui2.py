@@ -30,7 +30,7 @@ COLORS = [
 
 # Pygame setup
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tetris")
+pygame.display.set_caption("tetris")
 
 font_text = pygame.font.SysFont("comicsans", 25)
 
