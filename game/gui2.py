@@ -6,7 +6,6 @@ import os
 
 pygame.init()
 
-# --- GRID / LAYOUT ---
 GRID_W, GRID_H = 10, 20
 BLOCK = 30
 PADDING = 50
@@ -17,7 +16,6 @@ FIELD_W, FIELD_H = GRID_W * BLOCK, GRID_H * BLOCK
 SCREEN_W = PADDING + FIELD_W + 240 + PADDING
 SCREEN_H = HEADER_H + PADDING + FIELD_H + PADDING
 
-# --- TEMA ---
 BG = (28, 31, 38)
 GRID_CLR = (75, 80, 92)
 FIELD_BR = (66, 133, 244)
@@ -29,9 +27,9 @@ ACCENT = (255, 82, 82)
 HEADER_BG = (32, 36, 44)
 
 DEFAULT_COLOR = (0, 229, 255)
-HILITE_BORDER = (255, 88, 88)   # crveni border za last piece
+HILITE_BORDER = (255, 88, 88)
 
-# --- PYGAME ---
+
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("tetris")
 font_small = pygame.font.SysFont("segoeui", 20, bold=True)
@@ -39,7 +37,7 @@ font_med   = pygame.font.SysFont("segoeui", 26, bold=True)
 font_big   = pygame.font.SysFont("segoeui", 34, bold=True)
 clock = pygame.time.Clock()
 
-# --- POZICIJE ---
+
 FIELD_ORIGIN_Y = HEADER_H
 PANEL_X = PADDING + FIELD_W + 24
 PANEL_Y = FIELD_ORIGIN_Y + PADDING
@@ -53,29 +51,16 @@ STOP_BTN = pygame.Rect(
     BTN_W, BTN_H
 )
 
-# box za preview NEXT komada
 NEXT_BOX = pygame.Rect(PANEL_X + 20, PANEL_Y + 64, PANEL_W - 40, 120)
 
-# --- META (header iznad table) ---
-def load_run_meta():
-    meta = {"generation": None, "fitness": None, "genome": None}
-    for path in ("run_meta.json", "best_snapshot.json"):
-        if os.path.exists(path):
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                if "generation" in data: meta["generation"] = data["generation"]
-                if "fitness" in data: meta["fitness"] = data["fitness"]
-                if "genome" in data and isinstance(data["genome"], list):
-                    meta["genome"] = data["genome"]
-                break
-            except Exception:
-                pass
-    return meta
+def parse_placed(line: str):
+    if not line.startswith("PLACED:"):
+        return None
+    try:
+        return ast.literal_eval(line[7:].strip())
+    except Exception:
+        return None
 
-RUN_META = load_run_meta()
-
-# --- helpers ---
 def draw_rounded_rect(surf, rect, color, radius=12, width=0, border_color=None, border_width=2):
     pygame.draw.rect(surf, color, rect, border_radius=radius, width=width)
     if border_color and border_width > 0:
@@ -91,7 +76,6 @@ def parse_grid(line: str):
     return None
 
 def parse_next(line: str):
-    # očekuje "NEXT:<literal 2D lista>"
     if not line.startswith("NEXT:"):
         return None
     payload = line[5:].strip()
@@ -141,7 +125,25 @@ def wrap_and_draw_text(text, font, color, x, y, max_width, line_spacing=4):
         screen.blit(surf, (x, yy))
         yy += surf.get_height() + line_spacing
 
-# --- drawing ---
+def load_run_meta():
+    meta = {"generation": None, "fitness": None, "genome": None, "label": None}
+    for path in ("run_meta.json", "best_ever.json", "best_of_last_gen.json"):
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if "generation" in data: meta["generation"] = data["generation"]
+                if "fitness" in data: meta["fitness"] = data["fitness"]
+                if "genome" in data and isinstance(data["genome"], list):
+                    meta["genome"] = data["genome"]
+                if "label" in data: meta["label"] = data["label"]
+                break
+            except Exception:
+                pass
+    return meta
+
+RUN_META = load_run_meta()
+
 def draw_header(meta):
     rect = pygame.Rect(0, 0, SCREEN_W, HEADER_H)
     draw_rounded_rect(screen, rect, HEADER_BG, radius=0)
@@ -149,8 +151,10 @@ def draw_header(meta):
     gen = meta.get("generation")
     fit = meta.get("fitness")
     genome = meta.get("genome")
+    label = meta.get("label")
 
-    t1 = font_med.render(f"Generation: {gen if gen is not None else '—'}", True, TEXT_CLR)
+    label_str = f" ({label})" if label else ""
+    t1 = font_med.render(f"Generation: {gen if gen is not None else '—'}{label_str}", True, TEXT_CLR)
     t2 = font_med.render(f"Fitness: {fit if fit is not None else '—'}", True, TEXT_CLR)
     screen.blit(t1, (PADDING, 14))
     screen.blit(t2, (PADDING, 14 + t1.get_height() + 8))
@@ -180,7 +184,6 @@ def draw_field(grid, last_piece_cells):
     screen.fill(BG)
     draw_header(RUN_META)
 
-    # okvir i mreža
     field_rect = pygame.Rect(PADDING, FIELD_ORIGIN_Y + PADDING, FIELD_W, FIELD_H)
     pygame.draw.rect(screen, FIELD_BR, field_rect, width=3, border_radius=6)
     for y in range(1, GRID_H):
@@ -192,7 +195,6 @@ def draw_field(grid, last_piece_cells):
                          (PADDING + x*BLOCK, FIELD_ORIGIN_Y + PADDING),
                          (PADDING + x*BLOCK, FIELD_ORIGIN_Y + PADDING + FIELD_H), 1)
 
-    # postojeće ćelije
     for y, row in enumerate(grid):
         for x, v in enumerate(row):
             if v:
@@ -202,7 +204,6 @@ def draw_field(grid, last_piece_cells):
                 pygame.draw.rect(screen, DEFAULT_COLOR, cell)
                 pygame.draw.rect(screen, (240,240,240), cell, 1)
 
-    # naglasi sve ćelije poslednjeg položenog komada CRVENIM okvirom
     for (x, y) in last_piece_cells:
         r = pygame.Rect(PADDING + x*BLOCK,
                         FIELD_ORIGIN_Y + PADDING + y*BLOCK,
@@ -225,17 +226,14 @@ def draw_side_panel(score, next_piece_cells):
     draw_rounded_rect(screen, pygame.Rect(PANEL_X, PANEL_Y, PANEL_W, PANEL_H),
                       PANEL_BG, radius=16, border_color=PANEL_BR, border_width=2)
 
-    # naslov "Next piece" centriran iznad BOX-a
     title = font_med.render("Next piece", True, TEXT_CLR)
     title_x = NEXT_BOX.centerx - title.get_width() // 2
     title_y = NEXT_BOX.y - title.get_height() - 8
     screen.blit(title, (title_x, title_y))
 
-    # box + sadržaj
     draw_rounded_rect(screen, NEXT_BOX, (26,29,36), radius=10, border_color=(58,65,78), border_width=2)
     fit_and_draw_cells(NEXT_BOX, next_piece_cells, color=(0, 232, 255))
 
-    # score
     score_text = font_big.render(str(score), True, ACCENT)
     score_lbl  = font_small.render("Score", True, SUBTLE)
     lbl_x = PANEL_X + (PANEL_W - score_lbl.get_width()) // 2
@@ -256,7 +254,6 @@ def main():
     score = 0
     next_piece_cells = []
 
-    # prvi crtež
     draw_field(grid, [])
     draw_side_panel(score, next_piece_cells)
     pygame.display.flip()
@@ -265,7 +262,6 @@ def main():
     running = True
 
     for line in data:
-        # eventi i STOP tokom replay-a
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
@@ -279,7 +275,6 @@ def main():
             maybe_next = parse_next(line)
             if maybe_next is not None:
                 next_piece_cells = maybe_next
-            # ažurira se panel odmah (opciono)
             draw_field(grid, [])
             draw_side_panel(score, next_piece_cells)
             pygame.display.flip()
@@ -287,7 +282,6 @@ def main():
 
         new_grid = parse_grid(line)
         if new_grid is not None:
-            # obeleži last piece (za CRVENI border u polju)
             last_piece = diff_last_piece(prev_grid, new_grid)
             prev_grid = [row[:] for row in new_grid]
             grid = new_grid

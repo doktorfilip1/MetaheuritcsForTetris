@@ -55,6 +55,7 @@ def run_ga(
         "fitness": float(best_overall.fitness),
         "genome": best_overall.code[:],
         "pieces": snap.get("pieces_used", []),
+        "label": "best-ever",
     }
     if save_best_snapshot:
         _save_snapshot(snapshot_path, best_snapshot)
@@ -107,6 +108,7 @@ def run_ga(
                 "fitness": float(best_overall.fitness),
                 "genome": best_overall.code[:],
                 "pieces": snap.get("pieces_used", []),
+                "label": "best-ever",
             }
             if save_best_snapshot:
                 _save_snapshot(snapshot_path, best_snapshot)
@@ -127,11 +129,20 @@ def run_ga(
         f"genome = {[round(x, 4) for x in best_overall.code]}"
     )
 
+    final_meta = {
+        "generation": int(best_snapshot.get("generation", 0)),
+        "fitness": float(best_overall.fitness),
+        "genome": [float(x) for x in best_overall.code],
+        "label": "best-ever",
+    }
+    with open("run_meta.json", "w", encoding="utf-8") as f:
+        json.dump(final_meta, f)
+
     if replay_best_after and best_snapshot is not None:
         simulate_game(
             best_snapshot["genome"],
             write_frames=True,
-            piece_sequence=best_snapshot["pieces"],
+            piece_sequence=best_snapshot.get("pieces", []),
             max_steps=replay_limit,
         )
         print("Replayed best-ever and wrote frames to sheets.txt")

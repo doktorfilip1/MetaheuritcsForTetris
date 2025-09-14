@@ -1,4 +1,4 @@
-import math, random
+import random
 from typing import List, Callable
 from .individual import Individual
 
@@ -27,20 +27,6 @@ def roulette_selection(pop: List[Individual]) -> Individual:
             return ind
     return pop[-1]
 
-def boltzmann_selection(pop: List[Individual], temperature: float) -> Individual:
-    fits = [ind.fitness for ind in pop]
-    max_fit = max(fits)
-    exps = [math.exp((f - max_fit) / max(1e-6, temperature)) for f in fits]
-    s = sum(exps)
-    if s == 0:
-        return random.choice(pop)
-    r = random.random() * s
-    cum = 0.0
-    for ind, e in zip(pop, exps):
-        cum += e
-        if cum >= r:
-            return ind
-    return pop[-1]
 
 def make_selector(name: str, **kwargs) -> Callable[[List[Individual]], Individual]:
     name = name.lower()
@@ -49,8 +35,4 @@ def make_selector(name: str, **kwargs) -> Callable[[List[Individual]], Individua
         return lambda pop: tournament_selection(pop, k=k)
     if name == "roulette":
         return lambda pop: roulette_selection(pop)
-    if name == "boltzmann":
-
-        get_T = kwargs["get_temperature"]
-        return lambda pop: boltzmann_selection(pop, temperature=get_T())
     raise ValueError(f"Unknown selection: {name}")

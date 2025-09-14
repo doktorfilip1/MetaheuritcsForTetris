@@ -6,7 +6,6 @@ def _well_sum(field):
             left  = 1 if c == 0     else field[r][c-1]
             right = 1 if c == w-1   else field[r][c+1]
             if field[r][c] == 0 and left == 1 and right == 1:
-                # izbroj dubinu bunara naniže
                 d = 0; rr = r
                 while rr < h and field[rr][c] == 0:
                     d += 1; rr += 1
@@ -17,13 +16,13 @@ def _column_transitions(field):
     h = len(field); w = len(field[0])
     trans = 0
     for c in range(w):
-        prev = 1  # zamisli pod kao popunjen
+        prev = 1
         for r in range(h):
             cur = field[r][c]
             if cur != prev:
                 trans += 1
             prev = cur
-        if prev == 0:  # prelaz sa poslednjeg 0 na “pod”
+        if prev == 0:
             trans += 1
     return trans
 

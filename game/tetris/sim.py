@@ -85,7 +85,12 @@ def simulate_game(
             next_block = next_rand_piece()
 
     if writer:
-        writer.close()
+        placed = []
+        for y in range(Y):
+            for x in range(X):
+                if table[y][x] == 0 and best_field[y][x] != 0:
+                    placed.append((x, y))
+        writer.write("PLACED:" + str(placed) + "\n")
 
     if capture:
         return {"pieces_used": used_pieces, "score": score}
